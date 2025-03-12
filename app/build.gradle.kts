@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     // Plugin de Kotlin Serialization (se usa la versión definida en el classpath del proyecto raíz)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.0"
-    id("kotlin-kapt")
+    id("com.google.devtools.ksp") version "1.9.0-1.0.13"
 }
 
 android {
@@ -64,8 +64,7 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.0")
     implementation("androidx.activity:activity-compose:1.7.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
-
+    ksp("androidx.room:room-compiler:2.6.1")
     // --- Room ---
     implementation("androidx.room:room-ktx:2.5.1")
     // Si usas kapt para Room Compiler (descomenta la siguiente línea y aplica el plugin kapt en el top-level)

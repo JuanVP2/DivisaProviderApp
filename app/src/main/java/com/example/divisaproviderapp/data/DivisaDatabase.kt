@@ -8,7 +8,6 @@ import com.example.divisaproviderapp.model.Divisa
 
 @Database(entities = [Divisa::class], version = 1, exportSchema = false)
 abstract class DivisaDatabase : RoomDatabase() {
-
     abstract fun divisaDao(): DivisaDao
 
     companion object {
