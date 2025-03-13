@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation (libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.vision.internal.vkp)
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 //    implementation(libs.mpandroidchart.v310)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
