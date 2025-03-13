@@ -27,12 +27,10 @@
         <provider
             android:name="com.example.divisaproviderapp.provider.DivisaContentProvider"
             android:authorities="com.example.divisaproviderapp.provider"
-            android:exported="false"
+            android:exported="true"
             android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths_temp"/>
         </provider>
+
 
         <activity
             android:name=".MainActivity"

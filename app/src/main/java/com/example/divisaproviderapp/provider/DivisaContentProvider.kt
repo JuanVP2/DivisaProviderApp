@@ -27,7 +27,7 @@ class DivisaContentProvider : ContentProvider() {
         const val COLUMN_FECHAHORA = "fechaHora"
 
         // Paquete de la aplicación permitida para acceder
-        private const val ALLOWED_PACKAGE = "com.example.otraplicacion"
+        private const val ALLOWED_PACKAGE = "com.example.divisainterfaz"
     }
 
     private lateinit var database: DivisaDatabase

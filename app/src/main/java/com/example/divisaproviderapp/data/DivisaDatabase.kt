@@ -8,7 +8,6 @@ import com.example.divisaproviderapp.model.Divisa
 
 @Database(entities = [Divisa::class], version = 1, exportSchema = false)
 abstract class DivisaDatabase : RoomDatabase() {
-
     abstract fun divisaDao(): DivisaDao
 
     companion object {
@@ -22,8 +21,6 @@ abstract class DivisaDatabase : RoomDatabase() {
                     DivisaDatabase::class.java,
                     "divisa_db"
                 )
-                // NO uses fallbackToDestructiveMigration si quieres conservar datos
-                // .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance
                 instance
