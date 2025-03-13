@@ -12,25 +12,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.divisainterfaz.DivisaModel
+import com.example.divisainterfaz.ui.theme.DivisaInterfazTheme
+import com.google.android.libraries.intelligence.acceleration.Analytics
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,7 +50,7 @@ class MainActivity : ComponentActivity() {
         Log.d("MainActivity", "Activity created - repository initialized")
 
         setContent {
-            MaterialTheme {
+            DivisaInterfazTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -49,11 +59,54 @@ class MainActivity : ComponentActivity() {
                         factory = DivisaViewModel.Factory(repository)
                     )
 
-                    DivisaScreen(viewModel)
+                    val chartViewModel: DivisaChartViewModel = viewModel(
+                        factory = DivisaChartViewModel.Factory(repository)
+                    )
+
+                    // Track which screen is currently active
+                    var currentScreen by remember { mutableStateOf(Screen.LIST) }
+
+                    Scaffold(
+                        bottomBar = {
+                            BottomAppBar {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    IconButton(onClick = { currentScreen = Screen.LIST }) {
+                                        Icon(
+                                            imageVector = Icons.Default.List,
+                                            contentDescription = "Lista"
+                                        )
+                                    }
+
+                                    IconButton(onClick = { currentScreen = Screen.CHART }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = "Gráfico"
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    ) { paddingValues ->
+                        Column(modifier = Modifier.padding(paddingValues)) {
+                            when (currentScreen) {
+                                Screen.LIST -> DivisaScreen(viewModel)
+                                Screen.CHART -> DivisaChartScreen(chartViewModel)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+// Enum para controlar la navegación
+enum class Screen {
+    LIST,
+    CHART
 }
 
 @Composable
@@ -168,7 +221,12 @@ fun DivisaItem(divisa: DivisaModel) {
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            Text(text = "ID: ${divisa.id}")
+            // Calculate and show the inverted rate (1 MXN to currency)
+            val invertedRate = 1.0 / divisa.tasa
+            Text(
+                text = "1 MXN = ${String.format("%.6f", invertedRate)} ${divisa.moneda}",
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 
