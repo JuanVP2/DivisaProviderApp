@@ -1,6 +1,7 @@
 package com.example.divisaproviderapp
 
 import android.app.Application
+import android.content.Intent
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.Configuration
@@ -13,6 +14,7 @@ import com.example.divisaproviderapp.data.DivisaDatabase
 import com.example.divisaproviderapp.data.DivisaRepository
 import com.example.divisaproviderapp.data.NetworkDivisaRepository
 import com.example.divisaproviderapp.network.DivisaApiService
+import com.example.divisaproviderapp.service.SincronizacionService
 import com.example.divisaproviderapp.workers.ActualizarDivisasWorker
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -27,6 +29,8 @@ class DivisaApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         forzarSincronizacionInmediata()
+        val intent = Intent(this, SincronizacionService::class.java)
+        startService(intent)
         try {
             // 1) Inicia la DB
             val db = DivisaDatabase.getInstance(this)

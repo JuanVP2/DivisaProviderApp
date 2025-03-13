@@ -8,7 +8,9 @@ import android.net.Uri
 import android.util.Log
 import com.example.divisaproviderapp.data.DivisaDatabase
 import com.example.divisaproviderapp.model.Divisa
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -23,8 +25,40 @@ class DivisaContentProvider : ContentProvider() {
         const val COLUMN_MONEDA = "moneda"
         const val COLUMN_TASA = "tasa"
         const val COLUMN_FECHAHORA = "fechaHora"
+
+        // Paquete de la aplicación permitida para acceder
+        private const val ALLOWED_PACKAGE = "com.example.otraplicacion"
     }
 
+    private lateinit var database: DivisaDatabase
+
+    override fun onCreate(): Boolean {
+        context?.let { ctx ->
+            database = DivisaDatabase.getInstance(ctx)
+
+            runBlocking {
+                val lista = withContext(Dispatchers.IO) {
+                    database.divisaDao().obtenerDivisasPorRango(
+                        "USD",
+                        "0000-01-01 00:00:00",
+                        "9999-12-31 23:59:59"
+                    )
+                }
+
+                Log.d("DivisaContentProvider", "Al iniciar, hay ${lista.size} registros de USD en la DB.")
+
+                // Si no hay datos, insertar datos de prueba
+                if (lista.isEmpty()) {
+                    insertarDatosEjemplo()
+                }
+            }
+        }
+        return true
+    }
+
+    /**
+     * Inserta datos de ejemplo si la base de datos está vacía.
+     */
     private suspend fun insertarDatosEjemplo() {
         val dao = database.divisaDao()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -48,31 +82,6 @@ class DivisaContentProvider : ContentProvider() {
         Log.d("DivisaContentProvider", "Se insertaron datos de ejemplo. Ahora hay ${divisasTrasInsert.size} registros USD en la DB.")
     }
 
-
-    private lateinit var database: DivisaDatabase
-
-    override fun onCreate(): Boolean {
-        context?.let { ctx ->
-            database = DivisaDatabase.getInstance(ctx)
-            runBlocking {
-                // Consulta rápida para ver si hay datos
-                val lista = database.divisaDao().obtenerDivisasPorRango(
-                    "USD",
-                    "0000-01-01 00:00:00",
-                    "9999-12-31 23:59:59"
-                )
-                Log.d("DivisaContentProvider", "Al iniciar, hay ${lista.size} registros de USD en la DB.")
-
-                // Si está vacío, insertar datos de ejemplo
-                if (lista.isEmpty()) {
-                    insertarDatosEjemplo()
-                }
-            }
-        }
-        return true
-    }
-
-
     override fun query(
         uri: Uri,
         projection: Array<out String>?,
@@ -80,18 +89,35 @@ class DivisaContentProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
+        // 🚨 Verifica que solo la app permitida pueda acceder
+        val callingPackage = callingPackage ?: return null
+        if (callingPackage != ALLOWED_PACKAGE) {
+            Log.e("DivisaContentProvider", "Acceso denegado a: $callingPackage")
+            return null
+        }
+
+        // 🔹 Extraer parámetros de la URI
         val currency = uri.getQueryParameter("currency") ?: return null
         val startDate = uri.getQueryParameter("startDate") ?: return null
         val endDate = uri.getQueryParameter("endDate") ?: return null
 
-        val listaDivisas: List<Divisa> = runBlocking {
+        // ❌ Validar parámetros antes de hacer la consulta
+        if (currency.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
+            Log.e("DivisaContentProvider", "Parámetros inválidos en la consulta.")
+            return null
+        }
+
+        // 🔹 Ejecutar consulta en un hilo de I/O
+        val listaDivisas = runBlocking(Dispatchers.IO) {
             database.divisaDao().obtenerDivisasPorRango(currency, startDate, endDate)
         }
 
+        // 🔹 Convertir lista a Cursor
         val cursor = MatrixCursor(arrayOf(COLUMN_ID, COLUMN_MONEDA, COLUMN_TASA, COLUMN_FECHAHORA))
         listaDivisas.forEach { divisa ->
             cursor.addRow(arrayOf(divisa.id, divisa.moneda, divisa.tasa, divisa.fechaHora))
         }
+
         return cursor
     }
 
