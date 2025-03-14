@@ -25,12 +25,36 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
     private val _chartUiState = MutableStateFlow(ChartUiState())
     val chartUiState: StateFlow<ChartUiState> = _chartUiState.asStateFlow()
 
+    // Add to DivisaChartViewModel class
+    private val _availableCurrencies = MutableStateFlow<List<String>>(emptyList())
+    val availableCurrencies: StateFlow<List<String>> = _availableCurrencies.asStateFlow()
+
     init {
         Log.d("DivisaChartViewModel", "ViewModel initialized")
-        // Initialize with default dates
         val endDate = getCurrentFormattedDate()
-        val startDate = getDateBefore(60) // Last 60 days by default
+        val startDate = getDateBefore(1)
+
+        // Load available currencies
+        loadAvailableCurrencies()
+
+        // Default to USD
         cargarDivisasPorRango("USD", startDate, endDate)
+    }
+
+    private fun loadAvailableCurrencies() {
+        viewModelScope.launch {
+            try {
+                val currencies = repository.getAvailableCurrencies()
+                _availableCurrencies.value = currencies
+
+                if (currencies.isNotEmpty() && _chartUiState.value.selectedCurrency !in currencies) {
+                    // Set first available currency as default if current selection is not available
+                    _chartUiState.update { it.copy(selectedCurrency = currencies.first()) }
+                }
+            } catch (e: Exception) {
+                Log.e("DivisaChartViewModel", "Error loading currencies", e)
+            }
+        }
     }
 
     // Load data for a specific date range

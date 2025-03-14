@@ -163,6 +163,7 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
     // Estados de UI
     val chartUiState by viewModel.chartUiState.collectAsState()
     val listaDivisas by viewModel.divisasPorRango.collectAsState()
+    val availableCurrencies by viewModel.availableCurrencies.collectAsState()
 
     // Estado para la moneda
     var moneda by remember { mutableStateOf(chartUiState.selectedCurrency) }
@@ -193,10 +194,12 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
         )
 
         // Campo de texto para la moneda
-        OutlinedTextField(
-            value = moneda,
-            onValueChange = { moneda = it },
-            label = { Text("Moneda") },
+        CurrencyDropdown(
+            selectedCurrency = moneda,
+            availableCurrencies = availableCurrencies,
+            onCurrencySelected = { newCurrency ->
+                moneda = newCurrency
+            },
             modifier = Modifier.fillMaxWidth()
         )
 

@@ -87,7 +87,37 @@ class DivisaClientRepository(private val context: Context) {
 
         return@withContext result
     }
+    /**
+     * Gets available currencies from the provider
+     */
+    suspend fun getAvailableCurrencies(): List<String> = withContext(Dispatchers.IO) {
+        val currencies = mutableListOf<String>()
 
+        try {
+            val uri = Uri.parse("content://$AUTHORITY/$BASE_PATH/currencies")
+            Log.d("DivisaClientRepo", "Querying available currencies: $uri")
+
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                Log.d("DivisaClientRepo", "Found ${cursor.count} currencies")
+
+                val currencyColumnIndex = cursor.getColumnIndexOrThrow("currency")
+                while (cursor.moveToNext()) {
+                    val currency = cursor.getString(currencyColumnIndex)
+                    currencies.add(currency)
+                }
+            } ?: run {
+                Log.e("DivisaClientRepo", "Failed to query currencies - null cursor returned")
+                // Add default currencies if provider doesn't support currency listing
+                currencies.addAll(listOf("USD", "EUR", "GBP", "JPY", "CAD"))
+
+            }
+        } catch (e: Exception) {
+            Log.e("DivisaClientRepo", "Error querying currencies", e)
+            currencies.addAll(listOf("USD", "EUR", "GBP", "JPY", "CAD"))
+        }
+
+        return@withContext currencies
+    }
     /**
      * Gets exchange rates for a specific currency for the last 7 days
      */
