@@ -13,13 +13,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Button(onClick = {
-                // Llamas a la función en la Application o donde la hayas definido
                 (application as DivisaApplication).forzarSincronizacionInmediata()
             }) {
                 Text("Forzar Sincronización")
                 val appInstance = application
                 Log.d("MainActivity", "Tipo de application: ${appInstance::class.java}")
-                val divisaApp = application as DivisaApplication // Ver si sigue fallando aquí
+                val divisaApp = application as DivisaApplication
             }
         }
     }

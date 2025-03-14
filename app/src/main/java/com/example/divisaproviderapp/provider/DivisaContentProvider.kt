@@ -17,7 +17,6 @@ import java.util.Locale
 class DivisaContentProvider : ContentProvider() {
 
     companion object {
-        // Ajusta la authority a tu gusto
         const val AUTHORITY = "com.example.divisaproviderapp.provider"
         const val TABLE_NAME = "divisas"
 
@@ -26,7 +25,6 @@ class DivisaContentProvider : ContentProvider() {
         const val COLUMN_TASA = "tasa"
         const val COLUMN_FECHAHORA = "fechaHora"
 
-        // Paquete de la aplicación permitida para acceder
         private const val ALLOWED_PACKAGE = "com.example.divisainterfaz"
     }
 
@@ -47,7 +45,6 @@ class DivisaContentProvider : ContentProvider() {
 
                 Log.d("DivisaContentProvider", "Al iniciar, hay ${lista.size} registros de USD en la DB.")
 
-                // Si no hay datos, insertar datos de prueba
                 if (lista.isEmpty()) {
                     insertarDatosEjemplo()
                 }
@@ -73,7 +70,6 @@ class DivisaContentProvider : ContentProvider() {
 
         dao.insertarDivisas(listaEjemplo)
 
-        // Log para verificar cuántos registros hay ahora
         val divisasTrasInsert = dao.obtenerDivisasPorRango(
             currency = "USD",
             startDate = "0000-01-01 00:00:00",
@@ -82,54 +78,45 @@ class DivisaContentProvider : ContentProvider() {
         Log.d("DivisaContentProvider", "Se insertaron datos de ejemplo. Ahora hay ${divisasTrasInsert.size} registros USD en la DB.")
     }
 
-    override fun query(
-        uri: Uri,
-        projection: Array<out String>?,
-        selection: String?,
-        selectionArgs: Array<out String>?,
-        sortOrder: String?
-    ): Cursor? {
-        // 🚨 Verifica que solo la app permitida pueda acceder
+
+    override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
+
         val callingPackage = callingPackage ?: return null
         if (callingPackage != ALLOWED_PACKAGE) {
             Log.e("DivisaContentProvider", "Acceso denegado a: $callingPackage")
             return null
         }
 
-        // Manejar endpoint para obtener monedas disponibles
         val uriPath = uri.path
         if (uriPath?.endsWith("/currencies") == true) {
             return getAvailableCurrencies()
         }
 
-        // 🔹 Extraer parámetros de la URI para búsqueda normal
-        val currency = uri.getQueryParameter("currency") ?: return null
-        val startDate = uri.getQueryParameter("startDate") ?: return null
-        val endDate = uri.getQueryParameter("endDate") ?: return null
+        val currency = uri.getQueryParameter("currency")
+        val startDate = uri.getQueryParameter("startDate")
+        val endDate = uri.getQueryParameter("endDate")
 
-        // ❌ Validar parámetros antes de hacer la consulta
-        if (currency.isEmpty() || startDate.isEmpty() || endDate.isEmpty()) {
-            Log.e("DivisaContentProvider", "Parámetros inválidos en la consulta.")
+        Log.d("DivisaContentProvider", "Query parameters - Currency: $currency, Start: $startDate, End: $endDate")
+
+        if (currency.isNullOrEmpty() || startDate.isNullOrEmpty() || endDate.isNullOrEmpty()) {
+            Log.e("DivisaContentProvider", "Parámetros inválidos en la consulta. Currency: $currency, Start: $startDate, End: $endDate")
             return null
         }
 
-        // 🔹 Ejecutar consulta en un hilo de I/O
         val listaDivisas = runBlocking(Dispatchers.IO) {
-            database.divisaDao().obtenerDivisasPorRango(currency, startDate, endDate)
+            Log.d("DivisaContentProvider", "Ejecutando consulta de BD: $currency entre $startDate y $endDate")
+            val result = database.divisaDao().obtenerDivisasPorRango(currency, startDate, endDate)
+            Log.d("DivisaContentProvider", "Consulta completada. Resultados: ${result.size}")
+            result
         }
 
-        // 🔹 Convertir lista a Cursor
         val cursor = MatrixCursor(arrayOf(COLUMN_ID, COLUMN_MONEDA, COLUMN_TASA, COLUMN_FECHAHORA))
         listaDivisas.forEach { divisa ->
             cursor.addRow(arrayOf(divisa.id, divisa.moneda, divisa.tasa, divisa.fechaHora))
         }
-
         return cursor
     }
 
-    /**
-     * Obtiene la lista de monedas disponibles en la base de datos
-     */
     private fun getAvailableCurrencies(): Cursor {
         // Crear cursor para las monedas
         val cursor = MatrixCursor(arrayOf("currency"))
@@ -141,7 +128,6 @@ class DivisaContentProvider : ContentProvider() {
 
         Log.d("DivisaContentProvider", "Monedas disponibles: $currencies")
 
-        // Agregar cada moneda al cursor
         currencies.forEach { currency ->
             cursor.addRow(arrayOf(currency))
         }

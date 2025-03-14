@@ -32,10 +32,8 @@ class DivisaApplication : Application(), Configuration.Provider {
         val intent = Intent(this, SincronizacionService::class.java)
         startService(intent)
         try {
-            // 1) Inicia la DB
             val db = DivisaDatabase.getInstance(this)
 
-            // 2) Inicia Retrofit
             val baseUrl = "https://v6.exchangerate-api.com/v6/ea89034455f0918eb70bb598/"
             val retrofit = Retrofit.Builder()
                 .addConverterFactory(
@@ -47,13 +45,10 @@ class DivisaApplication : Application(), Configuration.Provider {
 
             val apiService = retrofit.create(DivisaApiService::class.java)
 
-            // 3) Crea el repositorio
             repository = NetworkDivisaRepository(apiService, db.divisaDao())
 
-            // 4) Programa WorkManager cada 15 minutos
             programarWorkManager()
 
-            // OPCIONAL: Forzar sincronización inmediata al iniciar (descomenta si quieres)
             //forzarSincronizacionInmediata()
 
             Log.d("DivisaApplication", "Provider App inicializado correctamente.")
@@ -62,10 +57,6 @@ class DivisaApplication : Application(), Configuration.Provider {
         }
     }
 
-    /**
-     * Llama a este método si quieres ejecutar el Worker inmediatamente,
-     * sin esperar los 15 minutos del PeriodicWorkRequest.
-     */
     fun forzarSincronizacionInmediata() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

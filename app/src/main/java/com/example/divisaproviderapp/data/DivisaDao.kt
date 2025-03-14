@@ -9,26 +9,12 @@ import com.example.divisaproviderapp.model.Divisa
 @Dao
 interface DivisaDao {
 
-    // Insert con IGNORE para no sobrescribir si hay conflicto en la PK
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarDivisas(divisas: List<Divisa>)
 
     @Query("SELECT DISTINCT moneda FROM divisas ORDER BY moneda ASC")
     suspend fun obtenerMonedasDisponibles(): List<String>
 
-    @Query("SELECT * FROM divisas WHERE fechaHora LIKE :fecha || '%'")
-    suspend fun obtenerDivisasPorFecha(fecha: String): List<Divisa>
-
-    // Consulta por rango de fecha y moneda
-    @Query("""
-        SELECT * FROM divisas
-        WHERE moneda = :currency
-          AND fechaHora BETWEEN :startDate AND :endDate
-        ORDER BY fechaHora ASC
-    """)
-    suspend fun obtenerDivisasPorRango(
-        currency: String,
-        startDate: String,
-        endDate: String
-    ): List<Divisa>
+    @Query("SELECT * FROM divisas WHERE moneda = :currency AND fechaHora BETWEEN :startDate AND :endDate ORDER BY fechaHora")
+    suspend fun obtenerDivisasPorRango(currency: String, startDate: String, endDate: String): List<Divisa>
 }
