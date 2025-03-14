@@ -105,7 +105,7 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         return sdf.format(calendar.time)
     }
 
-    // Format date from one format to another
+    // formato de decha
     fun formatDate(dateStr: String, inputFormat: String, outputFormat: String): String {
         return try {
             val inputSdf = SimpleDateFormat(inputFormat, Locale.getDefault())
@@ -122,7 +122,7 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         }
     }
 
-    // Factory to create ViewModel with repository
+    // ViewModel repository
     class Factory(private val repository: DivisaClientRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -134,7 +134,6 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
     }
 }
 
-// UI State for the chart screen
 data class ChartUiState(
     val isLoading: Boolean = false,
     val selectedCurrency: String = "USD",

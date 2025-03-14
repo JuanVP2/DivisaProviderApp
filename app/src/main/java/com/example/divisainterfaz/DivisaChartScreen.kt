@@ -9,14 +9,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -71,7 +71,6 @@ fun DivisaItem(divisa: DivisaModel) {
 /**
  * Composable para seleccionar fecha/hora.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimePickerField(
     label: String,
@@ -80,15 +79,12 @@ fun DateTimePickerField(
 ) {
     val context = LocalContext.current
 
-    // Formato para mostrar al usuario
     val displayFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("America/Mexico_City")
     }
 
-    // Formato para guardar internamente
     val internalFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
-    // Calendar para manipular la fecha/hora actual
     val calendar = Calendar.getInstance().apply {
         timeZone = TimeZone.getTimeZone("America/Mexico_City")
         try {
@@ -105,7 +101,6 @@ fun DateTimePickerField(
     }
 
     Column {
-        // Muestra la fecha/hora en un TextField de solo lectura
         OutlinedTextField(
             value = displayFormat.format(calendar.time),
             onValueChange = { /* No editar manualmente */ },
@@ -116,7 +111,6 @@ fun DateTimePickerField(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Botón para abrir DatePickerDialog y luego TimePickerDialog
         Button(onClick = {
             DatePickerDialog(
                 context,
@@ -149,15 +143,6 @@ fun DateTimePickerField(
     }
 }
 
-/**
- * Pantalla principal que muestra:
- * - Selector de moneda
- * - Selector de fechas
- * - Botón para cargar datos
- * - Estadísticas
- * - Lista de divisas
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
     // Estados de UI
@@ -182,174 +167,152 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
     var fechaInicio by remember { mutableStateOf(defaultStartDate) }
     var fechaFin by remember { mutableStateOf(defaultEndDate) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Visualizador de Divisas",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+    val scrollState = rememberScrollState()
 
-        // Campo de texto para la moneda
-        CurrencyDropdown(
-            selectedCurrency = moneda,
-            availableCurrencies = availableCurrencies,
-            onCurrencySelected = { newCurrency ->
-                moneda = newCurrency
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo "Desde"
-        DateTimePickerField(
-            label = "Desde",
-            dateTimeString = fechaInicio,
-            onDateTimeChange = { nuevaFecha ->
-                fechaInicio = nuevaFecha
-                Log.d("DivisaChartScreen", "Fecha inicio -> $nuevaFecha")
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Campo "Hasta"
-        DateTimePickerField(
-            label = "Hasta",
-            dateTimeString = fechaFin,
-            onDateTimeChange = { nuevaFecha ->
-                fechaFin = nuevaFecha
-                Log.d("DivisaChartScreen", "Fecha fin -> $nuevaFecha")
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botón para cargar datos
-        Button(
-            onClick = {
-                viewModel.cargarDivisasPorRango(moneda, fechaInicio, fechaFin)
-            },
-            modifier = Modifier.fillMaxWidth()
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(scrollState)
         ) {
-            Text("Cargar Datos")
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Mostrar error si hay
-        chartUiState.error?.let { error ->
             Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(vertical = 8.dp)
+                text = "Visualizador de Divisas",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
-        }
 
-        // Mostrar contenido o indicador de carga
-        if (chartUiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
+            // Campo de texto para la moneda
+            CurrencyDropdown(
+                selectedCurrency = moneda,
+                availableCurrencies = availableCurrencies,
+                onCurrencySelected = { newCurrency ->
+                    moneda = newCurrency
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo "Desde"
+            DateTimePickerField(
+                label = "Desde",
+                dateTimeString = fechaInicio,
+                onDateTimeChange = { nuevaFecha ->
+                    fechaInicio = nuevaFecha
+                    Log.d("DivisaChartScreen", "Fecha inicio -> $nuevaFecha")
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo "Hasta"
+            DateTimePickerField(
+                label = "Hasta",
+                dateTimeString = fechaFin,
+                onDateTimeChange = { nuevaFecha ->
+                    fechaFin = nuevaFecha
+                    Log.d("DivisaChartScreen", "Fecha fin -> $nuevaFecha")
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón para cargar datos
+            Button(
+                onClick = {
+                    viewModel.cargarDivisasPorRango(moneda, fechaInicio, fechaFin)
+                },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircularProgressIndicator()
+                Text("Cargar Datos")
             }
-        } else if (listaDivisas.isEmpty() && chartUiState.error == null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Mostrar error si hay
+            chartUiState.error?.let { error ->
                 Text(
-                    text = "No hay datos disponibles para mostrar",
-                    modifier = Modifier.padding(16.dp)
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
-        } else {
-            if (listaDivisas.isNotEmpty()) {
-                val ultimaDivisa = listaDivisas.maxByOrNull { it.fechaHora }
-                val primeraDivisa = listaDivisas.minByOrNull { it.fechaHora }
 
+            // Mostrar contenido o indicador de carga
+            if (chartUiState.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (listaDivisas.isEmpty() && chartUiState.error == null) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Estadísticas",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Text(
+                        text = "No hay datos disponibles para mostrar",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                if (listaDivisas.isNotEmpty()) {
+                    val ultimaDivisa = listaDivisas.maxByOrNull { it.fechaHora }
+                    val primeraDivisa = listaDivisas.minByOrNull { it.fechaHora }
 
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Estadísticas",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
 
-                        Row(modifier = Modifier.fillMaxWidth()) {
-//                            Text(
-//                                text = "Registros: ${listaDivisas.size}",
-//                                modifier = Modifier.weight(1f)
-//                            )
-
-                            ultimaDivisa?.let { divisa ->
-                                val inversa = 1.0 / divisa.tasa
-                                Text(
-                                    text = "1 MXN = ${String.format("%.6f", divisa.tasa)} ${divisa.moneda}",
-                                    fontWeight = FontWeight.Medium
-                                )
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                ultimaDivisa?.let { divisa ->
+                                    val inversa = 1.0 / divisa.tasa
+                                    Text(
+                                        text = "1 MXN = ${String.format("%.6f", inversa)} ${divisa.moneda}",
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
                         }
-
-//                        primeraDivisa?.let { primera ->
-//                            ultimaDivisa?.let { ultima ->
-//                                val cambio = (1.0/ultima.tasa - 1.0/primera.tasa) / (1.0/primera.tasa) * 100
-//                                Text(
-//                                    text = "Variación: %.2f%%".format(cambio),
-//                                    color = if (cambio >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-//                                )
-//                            }
-//                        }
                     }
                 }
+
+                if (listaDivisas.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Gráfica de Evolución",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(400.dp)
+                    ) {
+                        ExchangeRateChart(
+                            divisas = listaDivisas,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
-
-
-            // Título para la lista
-//            Text(
-//                text = "Lista de Tasas (${listaDivisas.size} registros)",
-//                style = MaterialTheme.typography.titleMedium,
-//                modifier = Modifier.padding(vertical = 8.dp)
-//            )
-            if (listaDivisas.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(24.dp)) // Mayor espacio antes de la gráfica
-
-                // Título específico para la gráfica
-                Text(
-                    text = "Gráfica de Evolución",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-
-                // Gráfica de tipo de cambio con mayor prominencia
-                ExchangeRateChart(
-                    divisas = listaDivisas,
-                    modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            // Lista de tasas
-//            LazyColumn {
-//                items(listaDivisas.sortedByDescending { it.fechaHora }) { divisa ->
-//                    DivisaItem(divisa)
-//                }
-//            }
-
         }
     }
 }

@@ -12,6 +12,5 @@ class DivisaClientApplication : Application() {
 
         divisaRepository = DivisaClientRepository(this)
 
-        Log.d("DivisaClientApp", "Application initialized - ready to fetch data from content provider")
     }
 }
