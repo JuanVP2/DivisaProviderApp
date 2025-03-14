@@ -116,7 +116,6 @@ fun DateTimePickerField(
                 context,
                 { _, year, month, dayOfMonth ->
                     calendar.set(year, month, dayOfMonth)
-                    // Luego abrimos TimePicker
                     TimePickerDialog(
                         context,
                         { _, hourOfDay, minute ->
@@ -145,15 +144,12 @@ fun DateTimePickerField(
 
 @Composable
 fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
-    // Estados de UI
     val chartUiState by viewModel.chartUiState.collectAsState()
     val listaDivisas by viewModel.divisasPorRango.collectAsState()
     val availableCurrencies by viewModel.availableCurrencies.collectAsState()
 
-    // Estado para la moneda
     var moneda by remember { mutableStateOf(chartUiState.selectedCurrency) }
 
-    // Estados para "Desde" y "Hasta" en formato "yyyy-MM-dd HH:mm:ss"
     val defaultStartDate = remember {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.MONTH, -2) // 2 meses atrás
@@ -176,13 +172,7 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
-            Text(
-                text = "Visualizador de Divisas",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
-            // Campo de texto para la moneda
             CurrencyDropdown(
                 selectedCurrency = moneda,
                 availableCurrencies = availableCurrencies,
@@ -192,9 +182,8 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Campo "Desde"
             DateTimePickerField(
                 label = "Desde",
                 dateTimeString = fechaInicio,
@@ -204,9 +193,8 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Campo "Hasta"
             DateTimePickerField(
                 label = "Hasta",
                 dateTimeString = fechaFin,
@@ -216,7 +204,7 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Botón para cargar datos
             Button(
@@ -228,9 +216,8 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 Text("Cargar Datos")
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Mostrar error si hay
             chartUiState.error?.let { error ->
                 Text(
                     text = error,
@@ -239,7 +226,6 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
                 )
             }
 
-            // Mostrar contenido o indicador de carga
             if (chartUiState.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -277,9 +263,8 @@ fun DivisaChartScreen(viewModel: DivisaChartViewModel) {
 
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 ultimaDivisa?.let { divisa ->
-                                    val inversa = 1.0 / divisa.tasa
                                     Text(
-                                        text = "1 MXN = ${String.format("%.6f", inversa)} ${divisa.moneda}",
+                                        text = "1 MXN = ${String.format("%.6f", divisa.tasa/1.0)} ${divisa.moneda}",
                                         fontWeight = FontWeight.Medium
                                     )
                                 }

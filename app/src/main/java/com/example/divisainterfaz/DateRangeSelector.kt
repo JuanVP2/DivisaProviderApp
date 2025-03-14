@@ -33,7 +33,6 @@ fun DateRangeSelector(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Currency selection
         OutlinedTextField(
             value = currency,
             onValueChange = onCurrencyChange,
@@ -44,7 +43,6 @@ fun DateRangeSelector(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start date
         DateTimePickerField(
             label = "Start Date",
             dateTimeString = startDate,
@@ -53,7 +51,6 @@ fun DateRangeSelector(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // End date
         DateTimePickerField(
             label = "End Date",
             dateTimeString = endDate,
@@ -62,7 +59,6 @@ fun DateRangeSelector(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Load data button
         Button(
             onClick = onLoadData,
             modifier = Modifier.fillMaxWidth()

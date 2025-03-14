@@ -17,15 +17,12 @@ import java.util.TimeZone
 
 class DivisaChartViewModel(private val repository: DivisaClientRepository) : ViewModel() {
 
-    // State for chart data
     private val _divisasPorRango = MutableStateFlow<List<DivisaModel>>(emptyList())
     val divisasPorRango: StateFlow<List<DivisaModel>> = _divisasPorRango.asStateFlow()
 
-    // UI State for loading and errors
     private val _chartUiState = MutableStateFlow(ChartUiState())
     val chartUiState: StateFlow<ChartUiState> = _chartUiState.asStateFlow()
 
-    // Add to DivisaChartViewModel class
     private val _availableCurrencies = MutableStateFlow<List<String>>(emptyList())
     val availableCurrencies: StateFlow<List<String>> = _availableCurrencies.asStateFlow()
 
@@ -34,10 +31,8 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         val endDate = getCurrentFormattedDate()
         val startDate = getDateBefore(1)
 
-        // Load available currencies
         loadAvailableCurrencies()
 
-        // Default to USD
         cargarDivisasPorRango("USD", startDate, endDate)
     }
 
@@ -48,7 +43,6 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
                 _availableCurrencies.value = currencies
 
                 if (currencies.isNotEmpty() && _chartUiState.value.selectedCurrency !in currencies) {
-                    // Set first available currency as default if current selection is not available
                     _chartUiState.update { it.copy(selectedCurrency = currencies.first()) }
                 }
             } catch (e: Exception) {
@@ -57,7 +51,6 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         }
     }
 
-    // Load data for a specific date range
     fun cargarDivisasPorRango(moneda: String, fechaInicio: String, fechaFin: String) {
         viewModelScope.launch {
             Log.d("DivisaChartViewModel", "Loading rates for $moneda from $fechaInicio to $fechaFin")
@@ -91,13 +84,11 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         }
     }
 
-    // Helper method to get current date in required format
     private fun getCurrentFormattedDate(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         return sdf.format(Date())
     }
 
-    // Helper method to get a date X days before current date
     private fun getDateBefore(days: Int): String {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_YEAR, -days)
@@ -105,24 +96,8 @@ class DivisaChartViewModel(private val repository: DivisaClientRepository) : Vie
         return sdf.format(calendar.time)
     }
 
-    // formato de decha
-    fun formatDate(dateStr: String, inputFormat: String, outputFormat: String): String {
-        return try {
-            val inputSdf = SimpleDateFormat(inputFormat, Locale.getDefault())
-            val outputSdf = SimpleDateFormat(outputFormat, Locale.getDefault())
-            val date = inputSdf.parse(dateStr)
-            if (date != null) {
-                outputSdf.format(date)
-            } else {
-                dateStr
-            }
-        } catch (e: Exception) {
-            Log.e("DivisaChartViewModel", "Error formatting date: $dateStr", e)
-            dateStr
-        }
-    }
 
-    // ViewModel repository
+    //  repository
     class Factory(private val repository: DivisaClientRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

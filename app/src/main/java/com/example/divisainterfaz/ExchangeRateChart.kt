@@ -32,13 +32,13 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.6f) // Usa una proporción relativa del espacio disponible
+            .fillMaxHeight(0.6f)
             .padding(vertical = 12.dp)
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxSize() // Usa todo el espacio disponible dentro de la Card
+                .fillMaxSize()
         ) {
             Text(
                 text = "Evolución de Tipo de Cambio ${divisas.firstOrNull()?.moneda ?: ""}",
@@ -46,8 +46,6 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-
-            // Área de depuración - para verificar que llegamos a este punto
             Text(
                 text = "Datos disponibles: ${divisas.size}",
                 style = MaterialTheme.typography.bodySmall,
@@ -59,7 +57,7 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f), // Usa peso 1 para tomar todo el espacio disponible
+                    .weight(1f),
                 factory = { context ->
                     Log.d("ExchangeRateChart", "Creando instancia del LineChart")
                     LineChart(context).apply {
@@ -76,7 +74,6 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
                         axisRight.isEnabled = false
                         axisLeft.setDrawGridLines(false)
 
-                        // Importante: asegurar que el gráfico tenga suficiente espacio para las etiquetas
                         setExtraOffsets(10f, 10f, 10f, 20f)
 
                         animateX(1500)
@@ -139,7 +136,6 @@ private fun updateChartWithData(chart: LineChart, divisas: List<DivisaModel>) {
 
         chart.setVisibleXRangeMaximum((divisas.size / 2).coerceAtLeast(5).toFloat())
 
-        // Asegurar que el gráfico ocupe todo el espacio disponible
         chart.layoutParams.width = chart.width
         chart.layoutParams.height = chart.height
 
