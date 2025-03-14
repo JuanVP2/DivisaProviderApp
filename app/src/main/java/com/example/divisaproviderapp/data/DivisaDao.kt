@@ -13,7 +13,9 @@ interface DivisaDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertarDivisas(divisas: List<Divisa>)
 
-    // Por si quieres filtrar por fecha exacta
+    @Query("SELECT DISTINCT moneda FROM divisas ORDER BY moneda ASC")
+    suspend fun obtenerMonedasDisponibles(): List<String>
+
     @Query("SELECT * FROM divisas WHERE fechaHora LIKE :fecha || '%'")
     suspend fun obtenerDivisasPorFecha(fecha: String): List<Divisa>
 

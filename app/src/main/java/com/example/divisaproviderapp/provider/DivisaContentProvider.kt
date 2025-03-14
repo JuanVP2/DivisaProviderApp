@@ -96,7 +96,13 @@ class DivisaContentProvider : ContentProvider() {
             return null
         }
 
-        // 🔹 Extraer parámetros de la URI
+        // Manejar endpoint para obtener monedas disponibles
+        val uriPath = uri.path
+        if (uriPath?.endsWith("/currencies") == true) {
+            return getAvailableCurrencies()
+        }
+
+        // 🔹 Extraer parámetros de la URI para búsqueda normal
         val currency = uri.getQueryParameter("currency") ?: return null
         val startDate = uri.getQueryParameter("startDate") ?: return null
         val endDate = uri.getQueryParameter("endDate") ?: return null
@@ -116,6 +122,28 @@ class DivisaContentProvider : ContentProvider() {
         val cursor = MatrixCursor(arrayOf(COLUMN_ID, COLUMN_MONEDA, COLUMN_TASA, COLUMN_FECHAHORA))
         listaDivisas.forEach { divisa ->
             cursor.addRow(arrayOf(divisa.id, divisa.moneda, divisa.tasa, divisa.fechaHora))
+        }
+
+        return cursor
+    }
+
+    /**
+     * Obtiene la lista de monedas disponibles en la base de datos
+     */
+    private fun getAvailableCurrencies(): Cursor {
+        // Crear cursor para las monedas
+        val cursor = MatrixCursor(arrayOf("currency"))
+
+        // Obtener monedas únicas de la base de datos
+        val currencies = runBlocking(Dispatchers.IO) {
+            database.divisaDao().obtenerMonedasDisponibles()
+        }
+
+        Log.d("DivisaContentProvider", "Monedas disponibles: $currencies")
+
+        // Agregar cada moneda al cursor
+        currencies.forEach { currency ->
+            cursor.addRow(arrayOf(currency))
         }
 
         return cursor
