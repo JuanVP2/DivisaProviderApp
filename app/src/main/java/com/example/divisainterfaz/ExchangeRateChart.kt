@@ -1,6 +1,3 @@
-// 1. Verificar que el archivo ExchangeRateChart.kt está completo
-// Asegúrate de que este archivo esté en el mismo paquete que el resto de tu código
-
 package com.example.divisainterfaz
 
 import android.graphics.Color
@@ -10,7 +7,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,12 +39,18 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
 
     Log.d("ExchangeRateChart", "Intentando mostrar gráfica con ${divisas.size} datos")
 
+    val scrollState = rememberScrollState()
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .verticalScroll(scrollState)
+        ) {
             Text(
                 text = "Evolución de Tipo de Cambio ${divisas.firstOrNull()?.moneda ?: ""}",
                 style = MaterialTheme.typography.titleMedium
@@ -63,8 +67,12 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val chartHeight = (divisas.size * 15).coerceAtLeast(300)
+
             AndroidView(
-                modifier = Modifier.size(width = 400.dp, height = 10000.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(chartHeight.dp),
                 factory = { context ->
                     Log.d("ExchangeRateChart", "Creando instancia del LineChart")
                     LineChart(context).apply {
@@ -74,16 +82,13 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
                         setScaleEnabled(true)
                         setPinchZoom(true)
 
-                        // Configurar eje X (fechas)
                         xAxis.position = XAxis.XAxisPosition.BOTTOM
                         xAxis.granularity = 1f
                         xAxis.labelRotationAngle = -45f
 
-                        // Configurar eje Y (tasas de cambio)
-                        axisRight.isEnabled = false  // Deshabilitar eje Y derecho
+                        axisRight.isEnabled = false
                         axisLeft.setDrawGridLines(false)
 
-                        // Animación
                         animateX(1500)
                     }
                 },
@@ -92,6 +97,9 @@ fun ExchangeRateChart(divisas: List<DivisaModel>, modifier: Modifier = Modifier)
                     updateChartWithData(chart, divisas)
                 }
             )
+
+            // Añadimos un espacio al final para mejorar la visualización con scroll
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
@@ -113,22 +121,19 @@ private fun updateChartWithData(chart: LineChart, divisas: List<DivisaModel>) {
 
         // Crear entradas para la gráfica
         val entries = sortedDivisas.mapIndexed { index, divisa ->
-            // Usar el valor de tasa invertido para representar moneda por 1 MXN
             val value = divisa.tasa.toFloat()
-            Entry(index.toFloat(), value)
-            Log.d("ExchangeRateChart", "Punto $index: fecha=${divisa.fechaHora}, valor=$value")
             Entry(index.toFloat(), value)
         }
 
-        // Crear dataset a partir de las entradas
+        //  dataset a partir de las entradas
         val dataSet = LineDataSet(entries, "${sortedDivisas.first().moneda} por 1 MXN").apply {
             color = Color.BLUE
             lineWidth = 3f
             circleRadius = 4f
             setCircleColor(Color.BLUE)
-            setDrawValues(true) // Mostrar valores para depuración
+            setDrawValues(false) // Ocultar valores
             valueTextSize = 9f
-            mode = LineDataSet.Mode.LINEAR  // Modo lineal para depuración
+            mode = LineDataSet.Mode.LINEAR
             setDrawFilled(true)
             fillColor = Color.rgb(65, 105, 225)
             fillAlpha = 40
@@ -151,9 +156,16 @@ private fun updateChartWithData(chart: LineChart, divisas: List<DivisaModel>) {
 
         chart.xAxis.valueFormatter = formatter
 
-        // Número óptimo de etiquetas
-        val labelCount = minOf(5, sortedDivisas.size)
+        // Número óptimo de etiquetas basado en la cantidad de datos
+        val labelCount = when {
+            sortedDivisas.size <= 7 -> sortedDivisas.size
+            sortedDivisas.size <= 30 -> 7
+            else -> 10
+        }
         chart.xAxis.labelCount = labelCount
+
+        // Ajustamos la visibilidad para mostrar todos los datos
+        chart.setVisibleXRangeMaximum(10f) // Mostrar máximo 10 puntos a la vez para mejor visualización
 
         // Refrescar la gráfica
         chart.invalidate()
